@@ -25,7 +25,7 @@ def main():
 def parse_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--checkpoint', type=str, required=True,
+    parser.add_argument('--checkpoint', type=str, required=False,
                         help='The path to the checkpoint. '
                              'This can be a relative path (relative to cfg.INTERACTIVE_MODELS_PATH) '
                              'or an absolute path. The file extension can be omitted.')

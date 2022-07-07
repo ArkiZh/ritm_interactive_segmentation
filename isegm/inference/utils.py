@@ -98,6 +98,8 @@ def compute_noc_metric(all_ious, iou_thrs, max_clicks=20):
 
 def find_checkpoint(weights_folder, checkpoint_name):
     weights_folder = Path(weights_folder)
+    if checkpoint_name is None:
+        checkpoint_name = ""
     if ':' in checkpoint_name:
         model_name, checkpoint_name = checkpoint_name.split(':')
         models_candidates = [x for x in weights_folder.glob(f'{model_name}*') if x.is_dir()]
