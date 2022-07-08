@@ -27,7 +27,7 @@ def main():
 def parse_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('model_path', type=str,
+    parser.add_argument('--model_path', type=str, default="models/iter_mask/hrnet18s_cocolvis_itermask_3p.py",
                         help='Path to the model script.')
 
     parser.add_argument('--exp-name', type=str, default='',
