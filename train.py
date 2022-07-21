@@ -79,4 +79,7 @@ def load_module(script_path):
 
 
 if __name__ == '__main__':
+    import sys
+    # sys.argv.extend("--exp-name play --model_path models/iter_mask/hrnet18_sbd_itermask_3p.py --batch-size 2 --workers 1".split())
+    sys.argv.extend("--exp-name play --model_path models/iter_mask/hrnet18s_cocolvis_itermask_3p.py --batch-size 2 --workers 1".split())
     main()

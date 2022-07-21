@@ -42,7 +42,7 @@ def init_predictor():
         'config_path': './config.yml',
         'cpu': False,
         'datasets': 'GrabCut,Berkeley',
-        'device': torch.device(type='cpu'),  # torch.device(type='cuda', index=0),
+        'device': torch.device(type='cuda', index=0),  # torch.device(type='cuda', index=0),
         'eval_mode': 'cvpr',
         'exp_path': '',
         'gpus': '0',

@@ -56,9 +56,9 @@ class DistMaps(nn.Module):
         else:
             num_points = points.shape[1] // 2
             points = points.view(-1, points.size(2))
-            points, points_order = torch.split(points, [2, 1], dim=1)
+            points, points_order = torch.split(points, [2, 1], dim=1) # 把座标拆出来，order没看出来做什么用的
 
-            invalid_points = torch.max(points, dim=1, keepdim=False)[0] < 0
+            invalid_points = torch.max(points, dim=1, keepdim=False)[0] < 0  # 找到无效点
             row_array = torch.arange(start=0, end=rows, step=1, dtype=torch.float32, device=points.device)
             col_array = torch.arange(start=0, end=cols, step=1, dtype=torch.float32, device=points.device)
 

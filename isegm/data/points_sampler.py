@@ -72,8 +72,8 @@ class MultiPointSampler(BasePointSampler):
         gt_mask, pos_masks, neg_masks = self._sample_mask(sample)
         binary_gt_mask = gt_mask > 0.5 if self.soft_targets else gt_mask > 0
 
-        self.selected_mask = gt_mask
-        self._selected_masks = pos_masks
+        self.selected_mask = gt_mask # 所有选中物体的像素并集
+        self._selected_masks = pos_masks # 列表：每个元素为单个选中物体的像素
 
         neg_mask_bg = np.logical_not(binary_gt_mask)
         neg_mask_border = self._get_border_mask(binary_gt_mask)
@@ -84,15 +84,15 @@ class MultiPointSampler(BasePointSampler):
                                             np.logical_not(binary_gt_mask))
 
         self._neg_masks = {
-            'bg': neg_mask_bg,
-            'other': neg_mask_other,
-            'border': neg_mask_border,
-            'required': neg_masks
+            'bg': neg_mask_bg, # 除了选中的物体，所有其它的像素
+            'other': neg_mask_other, # 除了选中的物体，其它的未选中物体像素或所有其它的像素
+            'border': neg_mask_border, # 选中物体向外膨胀出来的边界像素
+            'required': neg_masks  # 不知道是啥
         }
 
     def _sample_mask(self, sample: DSample):
         root_obj_ids = sample.root_objects
-
+        # 当物体不止一个时候，以一定的概率选择多个物体合并其mask
         if len(root_obj_ids) > 1 and random.random() < self.merge_objects_prob:
             max_selected_objects = min(len(root_obj_ids), self.max_num_merged_objects)
             num_selected_objects = np.random.randint(2, max_selected_objects + 1)
@@ -104,6 +104,7 @@ class MultiPointSampler(BasePointSampler):
         pos_segments = []
         neg_segments = []
         for obj_id in random_ids:
+            # obj_gt_mask可能经过soft处理， obj_pos_segments就是是标注的mask， obj_neg_segments只有在use_hierarchy才有值
             obj_gt_mask, obj_pos_segments, obj_neg_segments = self._sample_from_masks_layer(obj_id, sample)
             if gt_mask is None:
                 gt_mask = obj_gt_mask
@@ -113,6 +114,7 @@ class MultiPointSampler(BasePointSampler):
             pos_segments.extend(obj_pos_segments)
             neg_segments.extend(obj_neg_segments)
 
+        # 对pos_segments进行腐蚀处理，缩小选点的区域
         pos_masks = [self._positive_erode(x) for x in pos_segments]
         neg_masks = [self._positive_erode(x) for x in neg_segments]
 
@@ -121,7 +123,7 @@ class MultiPointSampler(BasePointSampler):
     def _sample_from_masks_layer(self, obj_id, sample: DSample):
         objs_tree = sample._objects
 
-        if not self.use_hierarchy:
+        if not self.use_hierarchy:  # 非层次时候没有negative_segments
             node_mask = sample.get_object_mask(obj_id)
             gt_mask = sample.get_soft_object_mask(obj_id) if self.soft_targets else node_mask
             return gt_mask, [node_mask], []
@@ -205,7 +207,7 @@ class MultiPointSampler(BasePointSampler):
                         aggregated_masks_with_prob.append((t, prob / len(selected_masks)))
                 else:
                     aggregated_masks_with_prob.append((x, 1.0 / len(selected_masks)))
-
+            # 前面取过点了，这里other_points_union是干啥的？设置的is_negative=True，但是mask还是用的正mask啊？
             other_points_union = self._sample_points(aggregated_masks_with_prob, is_negative=True)
             if len(other_points_union) + len(points) <= self.max_num_points:
                 points.extend(other_points_union)
@@ -231,7 +233,7 @@ class MultiPointSampler(BasePointSampler):
                 assert math.isclose(sum(indices_probs), 1.0)
         else:
             indices = np.argwhere(mask)
-
+        # 如果只有一个实例mask，随机在这个mask上取点，如果多个实例，每次取点先随机选哪个实例，再随机取点
         points = []
         for j in range(num_points):
             first_click = with_first_click and j == 0 and indices_probs is None
