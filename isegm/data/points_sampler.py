@@ -233,7 +233,7 @@ class MultiPointSampler(BasePointSampler):
                 assert math.isclose(sum(indices_probs), 1.0)
         else:
             indices = np.argwhere(mask)
-        # 如果只有一个实例mask，随机在这个mask上取点，如果多个实例，每次取点先随机选哪个实例，再随机取点
+        # 如果只有一个实例mask，随机在这个mask上取点;如果多个实例，每次取点先随机选哪个实例，再随机取点
         points = []
         for j in range(num_points):
             first_click = with_first_click and j == 0 and indices_probs is None

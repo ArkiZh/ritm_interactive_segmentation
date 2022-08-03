@@ -17,13 +17,15 @@ class SpatialGather_Module(nn.Module):
         self.scale = scale
 
     def forward(self, feats, probs):
-        batch_size, c, h, w = probs.size(0), probs.size(1), probs.size(2), probs.size(3)
-        probs = probs.view(batch_size, c, -1)
+        batch_size, class_num, h, w = probs.size(0), probs.size(1), probs.size(2), probs.size(3)
+        probs = probs.view(batch_size, class_num, -1)
+        probs = F.softmax(self.scale * probs, dim=2)  # batch x class_num x hw
+
         feats = feats.view(batch_size, feats.size(1), -1)
-        feats = feats.permute(0, 2, 1)  # batch x hw x c
-        probs = F.softmax(self.scale * probs, dim=2)  # batch x k x hw
-        ocr_context = torch.matmul(probs, feats) \
-            .permute(0, 2, 1).unsqueeze(3)  # batch x k x c
+        feats = feats.permute(0, 2, 1)  # batch x hw x channel_num
+
+        ocr_context = torch.matmul(probs, feats)  # batch x class_num x channel_num
+        ocr_context = ocr_context.permute(0, 2, 1).unsqueeze(3)  # batch x channel_num x class_num x 1
         return ocr_context
 
 
@@ -119,19 +121,19 @@ class ObjectAttentionBlock2D(nn.Module):
         if self.scale > 1:
             x = self.pool(x)
 
-        query = self.f_pixel(x).view(batch_size, self.key_channels, -1)
-        query = query.permute(0, 2, 1)
-        key = self.f_object(proxy).view(batch_size, self.key_channels, -1)
-        value = self.f_down(proxy).view(batch_size, self.key_channels, -1)
-        value = value.permute(0, 2, 1)
+        query = self.f_pixel(x).view(batch_size, self.key_channels, -1)  # B,KeyC,HW
+        query = query.permute(0, 2, 1)  # B,HW,KeyC
+        key = self.f_object(proxy).view(batch_size, self.key_channels, -1)  # B,KeyC,ClassNum
+        value = self.f_down(proxy).view(batch_size, self.key_channels, -1)  # B,KeyC,ClassNum
+        value = value.permute(0, 2, 1)  # B,ClassNum,KeyC
 
-        sim_map = torch.matmul(query, key)
+        sim_map = torch.matmul(query, key)  # B,HW,ClassNum
         sim_map = (self.key_channels ** -.5) * sim_map
         sim_map = F.softmax(sim_map, dim=-1)
 
         # add bg context ...
-        context = torch.matmul(sim_map, value)
-        context = context.permute(0, 2, 1).contiguous()
+        context = torch.matmul(sim_map, value)  # B,HW,KeyC
+        context = context.permute(0, 2, 1).contiguous()  # B,KeyC,HW
         context = context.view(batch_size, self.key_channels, *x.size()[2:])
         context = self.f_up(context)
         if self.scale > 1:

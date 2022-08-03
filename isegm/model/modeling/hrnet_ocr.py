@@ -89,7 +89,7 @@ class HighResolutionModule(nn.Module):
         fuse_layers = []
         for i in range(num_branches if self.multi_scale_output else 1):
             fuse_layer = []
-            for j in range(num_branches):
+            for j in range(num_branches):  # 左边j， 右边i
                 if j > i:
                     fuse_layer.append(nn.Sequential(
                         nn.Conv2d(in_channels=num_inchannels[j],

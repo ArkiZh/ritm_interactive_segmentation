@@ -133,8 +133,7 @@ class ISTrainer(object):
             self.train_data.sampler.set_epoch(epoch)
 
         log_prefix = 'Train' + self.task_prefix.capitalize()
-        tbar = tqdm(self.train_data, file=self.tqdm_out, ncols=100)\
-            if self.is_master else self.train_data
+        tbar = tqdm(self.train_data, file=self.tqdm_out, ncols=100) if self.is_master else self.train_data
 
         for metric in self.train_metrics:
             metric.reset_epoch_stats()
@@ -144,8 +143,7 @@ class ISTrainer(object):
         for i, batch_data in enumerate(tbar):
             global_step = epoch * len(self.train_data) + i
 
-            loss, losses_logging, splitted_batch_data, outputs = \
-                self.batch_forward(batch_data)
+            loss, losses_logging, splitted_batch_data, outputs = self.batch_forward(batch_data)
 
             self.optim.zero_grad()
             loss.backward()

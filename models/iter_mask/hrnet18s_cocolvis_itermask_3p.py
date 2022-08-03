@@ -59,7 +59,7 @@ def train(model, cfg, model_cfg):
         min_object_area=1000,
         keep_background_prob=0.05,
         points_sampler=points_sampler,
-        epoch_len=30000,
+        epoch_len=-1,
         stuff_prob=0.30
     )
 
@@ -69,7 +69,7 @@ def train(model, cfg, model_cfg):
         augmentator=val_augmentator,
         min_object_area=1000,
         points_sampler=points_sampler,
-        epoch_len=2000
+        epoch_len=-1
     )
 
     optimizer_params = {

@@ -21,7 +21,7 @@ class CocoLvisDataset(ISDataset):
         self.stuff_prob = stuff_prob
 
         with open(self._split_path / anno_file, 'rb') as f:
-            self.dataset_samples = sorted(pickle.load(f).items())
+            self.dataset_samples = sorted(pickle.load(f).items())[:100]
 
         if allow_list_name is not None:
             allow_list_path = self._split_path / allow_list_name
@@ -29,8 +29,7 @@ class CocoLvisDataset(ISDataset):
                 allow_images_ids = json.load(f)
             allow_images_ids = set(allow_images_ids)
 
-            self.dataset_samples = [sample for sample in self.dataset_samples
-                                    if sample[0] in allow_images_ids]
+            self.dataset_samples = [sample for sample in self.dataset_samples if sample[0] in allow_images_ids]
 
     def get_sample(self, index) -> DSample:
         image_id, sample = self.dataset_samples[index]
